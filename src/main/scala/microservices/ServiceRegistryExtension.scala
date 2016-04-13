@@ -7,7 +7,7 @@ import akka.cluster.ddata.{DistributedData, GSetKey, Key, ORSet}
 import akka.event.slf4j.Logger
 import akka.pattern.ask
 import akka.util.Timeout
-import microservices.ServiceRegistry.{Register, SubscribeMicroservice}
+import microservices.ServiceRegistry.{Terminate, Register, SubscribeMicroservice}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -62,9 +62,9 @@ class ServiceRegistryExtension(system: ExtendedActorSystem) extends Extension {
     futureActorRef.mapTo[ActorRef]
   }
 
-  def terminate(id: String): Unit = {
-    implicit val timeout = Timeout(5 seconds)
-    serviceRegistry ! ServiceRegistry.Terminated(id)
+  def terminate(microservice: ActorRef): Unit = {
+    Logger.apply("ServiceRegistryExtension").warn("SERVICEREGISTRYEXTENSION: I am terminating service: " + microservice)
+    serviceRegistry ! Terminate(microservice)
   }
 
   def subscribe(actor: ActorRef): Unit = {

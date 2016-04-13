@@ -1,6 +1,6 @@
-package Entity
+package entity
 
-import Entity.DatabaseMicroService._
+import entity.DatabaseMicroService._
 import akka.actor.ActorLogging
 import controller.MessageControllerMicroService.CheckEmployer
 import webserver.WritingOnScreenMicroservice.WriteOnScreenThis
@@ -15,7 +15,7 @@ class DatabaseMicroService(id: String, dependencies: Set[String]) extends Micros
 
   override def userReceive: Receive = {
 
-    case AllEmployers => {
+    case SomeEmployer => {
       log.info("DatabaseService: All employers")
 
       val employer = Db.query[Employer].whereEqual("publicId", "1").fetchOne().get
@@ -59,7 +59,7 @@ class DatabaseMicroService(id: String, dependencies: Set[String]) extends Micros
 
 object DatabaseMicroService {
 
-  case object AllEmployers
+  case object SomeEmployer
 
   case class SaveEmployer(publicId: String, name: String, surname: String, address: String, vek: Int)
 

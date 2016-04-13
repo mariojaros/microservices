@@ -12,7 +12,7 @@ abstract class Microservice(id: String, dependecies: Set[String]) extends Actor 
 
   override def preStart(): Unit = {
     log.info("MICROSERVICE: Microservice " + id + " started.")
-    status = STOPPED
+    status = RUNNING
   }
 
   override def postStop(): Unit = {
@@ -26,12 +26,18 @@ abstract class Microservice(id: String, dependecies: Set[String]) extends Actor 
     case RunningMicroservices(microservices) => {
       if (dependecies != null) {
         if (dependecies.forall(dependency => microservices.exists(microservice => microservice.serviceName == dependency))) {
-          status = RUNNING
-          log.info("Microservice " + self.toString() + " changed her status to RUNNING")
+          if (status == STOPPED) {
+            status = RUNNING
+            ServiceRegistryExtension(context.system).register(id, self)
+            log.info("Microservice " + self.toString() + " changed her status to RUNNING")
+          }
         }
         else {
-          status = STOPPED
-          log.warning("Microservice " + self.toString() + " changed her status to STOPPED. Be aware some others services could not working")
+          if (status == RUNNING) {
+            status = STOPPED
+            ServiceRegistryExtension(context.system).terminate(self)
+            log.warning("Microservice " + self.toString() + " changed her status to STOPPED. Be aware some others services could not working")
+          }
         }
       }
     }

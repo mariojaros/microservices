@@ -1,7 +1,7 @@
 package controller
 
-import Entity.DatabaseMicroService.EmployerChecked
-import Entity.Employer
+import entity.DatabaseMicroService.EmployerChecked
+import entity.Employer
 import controller.MessageControllerMicroService.CheckEmployer
 import microservices.Microservice
 

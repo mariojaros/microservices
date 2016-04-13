@@ -1,7 +1,7 @@
-package Entity
+package entity
 
-import Entity.DatabaseMicroService.SaveEmployer
-import Entity.StartDatabaseApplicationService.StartDatabaseApplication
+import entity.DatabaseMicroService.SaveEmployer
+import entity.StartDatabaseApplicationService.StartDatabaseApplication
 import microservices.{Microservice, RUNNING, ServiceRegistryExtension}
 
 import scala.concurrent.ExecutionContext.Implicits.global

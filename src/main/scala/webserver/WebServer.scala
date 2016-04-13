@@ -27,7 +27,7 @@ object WebServer {
     Cluster(actorSystem).registerOnMemberUp {
       DistributedData(actorSystem)
 
-      val webserverMicroservice = actorSystem.actorOf(Props(new WebServerMicroservice("webserverMicroservices", null)))
+      val webserverMicroservice = actorSystem.actorOf(Props(new WebServerMicroservice("webserverMicroservices", Set("databaseMicroservices"))))
 
       val writingOnScreenMicroservice = actorSystem.actorOf(Props(new WritingOnScreenMicroservice("writingOnScreenMicroservice", null)))
 
@@ -38,6 +38,8 @@ object WebServer {
       val startWebServerMicroservice = actorSystem.actorOf(Props(new StartWebServerMicroservice("startWebServerMicroservice", Set("writingOnScreenMicroservice", "webserverMicroservices"))))
 
       ServiceRegistryExtension(actorSystem).subscribe(startWebServerMicroservice)
+
+      ServiceRegistryExtension(actorSystem).subscribe(webserverMicroservice)
 
       startWebServerMicroservice ! StartServer
     }

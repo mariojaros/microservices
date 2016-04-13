@@ -1,7 +1,7 @@
 package webserver
 
-import Entity.DatabaseMicroService.AllEmployers
-import Entity.Employer
+import entity.DatabaseMicroService.SomeEmployer
+import entity.Employer
 import akka.util.Timeout
 import webserver.WritingOnScreenMicroservice.{Simple, WriteOnScreen, WriteOnScreenThis}
 import microservices.{Microservice, ServiceRegistryExtension}
@@ -26,7 +26,7 @@ class WritingOnScreenMicroservice(id: String, dependencies: Set[String]) extends
         case Success(status) => println("WritingOnScreenMicroservice: FutureDatabaseServicev poriadku")
         case Failure(status) => println("WritingOnScreenMicroservice: " + status);
       }
-      futureDatabaseMicroservice foreach (databaseMicroservice => databaseMicroservice ! AllEmployers)
+      futureDatabaseMicroservice foreach (databaseMicroservice => databaseMicroservice ! SomeEmployer)
     }
     case WriteOnScreenThis(employer) => {
 

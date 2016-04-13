@@ -1,4 +1,4 @@
-package Entity
+package entity
 
 import sorm._
 
@@ -27,7 +27,7 @@ case object InitDatabase {
 
   def init() = {
     Db.save(Employer("1", "Mario", "Jaros", "Kvetna", 23))
-    Db.save(Employer("2", "Peter", "Chovane", "Ulica", 26))
+    Db.save(Employer("2", "Peter", "Chovanec", "Ulica", 26))
     Db.save(Employer("3", "Pavol", "Jaros", "Kvetna", 19))
   }
 }

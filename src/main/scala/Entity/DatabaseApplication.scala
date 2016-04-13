@@ -1,6 +1,6 @@
-package Entity
+package entity
 
-import Entity.StartDatabaseApplicationService.StartDatabaseApplication
+import entity.StartDatabaseApplicationService.StartDatabaseApplication
 import akka.actor.{ActorSystem, Props}
 import akka.cluster.Cluster
 import akka.cluster.ddata.DistributedData
@@ -29,9 +29,11 @@ object DatabaseApplication {
 
       startApplication ! StartDatabaseApplication
 
-      val databaseService = actorSystem.actorOf(Props(new DatabaseMicroService("databaseMicroservices", null)))
+      val databaseService = actorSystem.actorOf(Props(new DatabaseMicroService("databaseMicroservices", Set("controllerMicroservices"))))
 
       ServiceRegistryExtension.get(actorSystem).register("databaseMicroservices", databaseService)
+
+      ServiceRegistryExtension(actorSystem).subscribe(databaseService)
 
     }
   }
