@@ -29,14 +29,14 @@ abstract class Microservice(id: String, dependecies: Set[String]) extends Actor 
           if (status == STOPPED) {
             status = RUNNING
             ServiceRegistryExtension(context.system).register(id, self)
-            log.info("Microservice " + self.toString() + " changed her status to RUNNING")
+            log.info("Microservice " + id + " changed her status to RUNNING")
           }
         }
         else {
           if (status == RUNNING) {
             status = STOPPED
             ServiceRegistryExtension(context.system).terminate(self)
-            log.warning("Microservice " + self.toString() + " changed her status to STOPPED. Be aware some others services could not working")
+            log.warning("Microservice " + id + " changed her status to STOPPED. Be aware some others services could not working")
           }
         }
       }

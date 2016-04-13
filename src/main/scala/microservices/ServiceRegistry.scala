@@ -50,7 +50,6 @@ class ServiceRegistry extends Actor with ActorLogging {
   }
 
   override def postStop(): Unit = {
-    log.info("koncim ServiceRegistry")
     cluster.unsubscribe(self)
   }
 
@@ -62,36 +61,35 @@ class ServiceRegistry extends Actor with ActorLogging {
       replicator ! Update(serviceKey, ORSet(), WriteAll(timeout = 5 seconds))(_ + service)
       replicator ! Update(AllServicesKey, ORSet(), WriteAll(timeout = 5 seconds))(_ + serviceKey)
 
-    case Terminated(ref) =>
-      val names = services.collect { case (name, refs) if refs.contains(ref) => name }
-      names.foreach { name ⇒
-        log.debug("Service with name [{}] terminated: {}", name, ref)
-        replicator ! Update(getServiceKey(name), ORSet(), WriteLocal)(_ - ref)
+    case Terminated(service) =>
+      val names = services.collect { case (name, services) if services.contains(service) => name }
+      names foreach { name =>
+        log.debug("SERVICEREGISTRY: Service with name " + name + " terminated: " + service)
+        replicator ! Update(getServiceKey(name), ORSet(), WriteAll(timeout = 5 seconds))(_ - service)
       }
 
     case Terminate(service) => {
-      val names = services.collect { case (name, refs) if refs.contains(service) => name }
-      names.foreach { name ⇒
-        log.warning("Service with name [{}] terminated: {}", name, service)
-        replicator ! Update(getServiceKey(name), ORSet(), WriteLocal)(_ - service)
+      val names = services.collect { case (name, services) if services.contains(service) => name }
+      names.foreach { name =>
+        log.warning("SERVICEREGISTRY: Service with name " + name + " terminated: " + service)
+        replicator ! Update(getServiceKey(name), ORSet(), WriteAll(timeout = 5 seconds))(_ - service)
       }
     }
 
     case c@Changed(AllServicesKey) =>
       val newKeys = c.get(AllServicesKey).elements
-      log.info("SERVICEREGISTRY: Value of service keys changed. {}, all: {}", (newKeys -- keys), newKeys)
-      (newKeys -- keys).foreach { dKey ⇒
-        // subscribe to get notifications of when services with this name are added or removed
-        replicator ! Subscribe(dKey, self)
+      log.info("SERVICEREGISTRY: Value of service keys changed. all: " +  newKeys)
+      (newKeys -- keys) foreach { key =>
+        replicator ! Subscribe(key, self)
       }
       keys = newKeys
       serviceRegisterActor ! ChangedData(keys)
 
     case c@Changed(ServiceKey(serviceId)) =>
       val newServices = c.get(getServiceKey(serviceId)).elements
-      log.info("SERVICEREGISTRY: Services changed for name [{}]: {}", serviceId, newServices)
+      log.info("SERVICEREGISTRY: Services changed for name " + serviceId + ": " + newServices)
       if (newServices.isEmpty) {
-        replicator ! Update(AllServicesKey, ORSet(), WriteLocal)(_ - ServiceKey(serviceId))
+        replicator ! Update(AllServicesKey, ORSet(), WriteAll(timeout = 5 seconds))(_ - ServiceKey(serviceId))
       }
       services = services.updated(serviceId, newServices)
       if (leader)
@@ -100,14 +98,9 @@ class ServiceRegistry extends Actor with ActorLogging {
     case SubscribeMicroservice(actor) => {
       serviceRegisterActor ! SubscribeService(actor)
     }
-    case LeaderChanged(node) ⇒
-      // Let one node (the leader) be responsible for removal of terminated services
-      // to avoid redundant work and too many death watch notifications.
-      // It is not critical to only do it from one node.
+    case LeaderChanged(node) =>
       val wasLeader = leader
       leader = node.exists(_ == cluster.selfAddress)
-      // when used with many (> 500) services you must increase the system message buffer
-      // `akka.remote.system-message-buffer-size`
       if (!wasLeader && leader)
         for (refs ← services.valuesIterator; ref ← refs)
           context.watch(ref)
