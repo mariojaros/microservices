@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-remote" % akkaVersion,
   "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
-  "com.typesafe.akka" % "akka-slf4j" % akkaVersion,
+  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
   "ch.qos.logback" % "logback-classic" % "1.1.2",
   "com.typesafe.akka" %% "akka-cluster-metrics" % akkaVersion,
   "com.typesafe.akka" %% "akka-cluster-tools" % akkaVersion,

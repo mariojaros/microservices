@@ -5,54 +5,159 @@ import akka.cluster.ClusterEvent.LeaderChanged
 import akka.cluster.ddata.Replicator._
 import akka.cluster.ddata._
 import akka.cluster.{Cluster, ClusterEvent}
-import microservices.RegistryInfo.{ChangedData, SubscribeService}
+import microservices.RegistryInfo.{ServiceKeysInfo, ChangedData, SubscribeService}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
+
+/** Companion object [[ServiceRegistry]] contains case classes represents messages which [[ServiceRegistry]] can receive.
+  *
+  */
 
 object ServiceRegistry {
 
   val props: Props = Props[ServiceRegistry]
 
-  final case class Register(name: String, service: ActorRef)
+  /** Message for register microservice.
+    *
+    * It holds name of service which will represents ID of microservice in whole distributed system. It also
+    * contains reference to microservice where others microservices can send messages.
+    *
+    * @param name is ID of registering microservice.
+    * @param service is reference to microservice.
+    */
+  case class Register(name: String, service: ActorRef)
 
-  final case class Lookup(name: String)
+  /** Message for looking up microservice by his name (ID).
+    *
+    * After sending this message [[ServiceRegistry]] will send [[scala.concurrent.Future]].
+    * @param name represents ID of searching service.
+    */
 
-  final case class Terminate(service: ActorRef)
+  case class Lookup(name: String)
 
-  final case class ServiceKey(serviceName: String) extends Key[ORSet[ActorRef]](serviceName)
+  /** Message for terminating and deleting microservice from [[ServiceRegistry]].
+    *
+    * It serve for deleting reference to service on demand from programmer.
+    *
+    * @param service to delete from [[ServiceRegistry]].
+    */
 
+  case class Terminate(service: ActorRef)
+
+  /** Class represent a key in distributed database.
+    *
+    * Extends [[Key]] to be able for saving in distributed database.
+    *
+    * @param serviceName is ID which represents microservice in system.
+    */
+  case class ServiceKey(serviceName: String) extends Key[ORSet[ActorRef]](serviceName)
+
+  /** Message for subscribing a service.
+    *
+    * When message comes [[ServiceRegistry]] sends [[SubscribeService]] to [[RegistryInfo]]
+    *
+    * @param actor is reference to microservice.
+    */
   case class SubscribeMicroservice(actor: ActorRef)
 
+  /** Message is use to inform subscribed services about actual state of running services.
+    *
+    */
+  case object SentInfoToSubscribers
+
+  /** Key variable providing key for saving all service keys in database. */
   private val AllServicesKey = ORSetKey[ServiceKey]("service-keys")
 
 }
 
+/** Purpose of class is manage all Microservice.
+  *
+  * It provide three main functionality for management od microservices:
+  *
+  * [[microservices.ServiceRegistry.Register]]
+  *
+  * [[microservices.ServiceRegistry.Lookup]]
+  *
+  * [[microservices.ServiceRegistry.Terminate]]
+  *
+  * Except of these three funcionality provide some other work for stable running of managment service.
+  *
+  * Class holds reference of [[Actor]] [[RegistryInfo]] and using it for informing microservices about their dependencies.
+  * When [[ServiceRegistry]] receives [[microservices.ServiceRegistry.SubscribeMicroservice]] message [[SubscribeService]] is sent to
+  * reference of [[RegistryInfo]].
+  *
+  * [[ServiceRegistry]] is existed one per node in the cluster. Data are saved in distributed database. [[Replicator]] serve as
+  * API interface to operate with data.
+  *
+  */
 class ServiceRegistry extends Actor with ActorLogging {
 
   import ServiceRegistry._
 
+  /** Reference to actor which provides interface to operate with data. */
   val replicator = DistributedData(context.system).replicator
+
+  /** Variable holding object of Cluster */
   implicit val cluster = Cluster(context.system)
 
+  /** Set of [[ServiceKey]]. Variable is storing keys of available microservices */
   var keys = Set.empty[ServiceKey]
+
+  /** Map all microservices. Variable contains references of [[Actor]] which are mapped to keys in [[Map]] collection. */
   var services = Map.empty[String, Set[ActorRef]]
 
+  /** Reference to actor [[RegistryInfo]]. Actor provides subscribing services and informs them about available microservices. */
   val serviceRegisterActor = context.system.actorOf(Props[RegistryInfo])
+
+  /** Variable holds information if current node is leader in cluster. */
   var leader = false
 
+  /** Generates [[ServiceKey]] from name of microservices.
+    *
+    * @param serviceName is ID of microservice.
+    * @return object of new [[ServiceKey]].
+    */
   def getServiceKey(serviceName: String): ServiceKey =
     ServiceKey(serviceName)
 
+  /** Override [[Actor]] method to implement some logic before start of [[ServiceRegistry]].
+    *
+    * [[ServiceRegistry]] is subscribed to [[replicator]] to subscribe for events in distributed database.
+    * [[ServiceRegistry]] is subscribed to [[cluster]] to subscribe for events in cluster.
+    */
   override def preStart(): Unit = {
     replicator ! Subscribe(AllServicesKey, self)
     cluster.subscribe(self, ClusterEvent.InitialStateAsEvents, classOf[ClusterEvent.LeaderChanged])
   }
 
+  /** Override [[Actor]] method to implement some logic before start of [[ServiceRegistry]]
+    *
+    * [[ServiceRegistry]] is un subscribed from [[cluster]].
+    */
   override def postStop(): Unit = {
     cluster.unsubscribe(self)
   }
 
+  /** Override [[Actor]] method receive where all business and behaviour of [[ServiceRegistry]] goes.
+    *
+    * [[ServiceRegistry]] can receive eight kind of message.
+    *
+    * When [[Register]] comes with ID and reference to [[Microservice]] it save in distributed database via [[replicator]] and also
+    * it save new [[ServiceKey]] to set of available microservices.
+    *
+    * When [[Terminated]] comes from [[context]] of dead actor [[ServiceRegistry]] delete this actor from distributed data.
+    *
+    * When [[Terminate]] comes with reference to actor microservice is deleted from distributed data.
+    *
+    * When [[Changed]] comes it can contains information about changed set of [[ServiceKey]] or changed data of microservices
+    * wtih specific key. If there is a new service [[ServiceRegistry]] subscribe for events of her lifecycle. If set of services
+    * with specific key is changed local variable [[services]] is changing too.
+    *
+    * When [[SubscribeMicroservice]] or [[SentInfoToSubscribers]] comes [[ServiceRegistry]] send available services to [[serviceRegisterActor]].
+    *
+    * When [[LeaderChanged]] comes node which was [[leader]] failed and new was set.
+    */
   def receive = {
     case Register(id, service) =>
       log.info("SERVICEREGISTRY: New microservices is registering:" + service + " with id: " + id + ".")
@@ -69,6 +174,7 @@ class ServiceRegistry extends Actor with ActorLogging {
       }
 
     case Terminate(service) => {
+      log.info("SERVICEREGISTRY: I am going end one of this services: " + services)
       val names = services.collect { case (name, services) if services.contains(service) => name }
       names.foreach { name =>
         log.warning("SERVICEREGISTRY: Service with name " + name + " terminated: " + service)
@@ -93,10 +199,14 @@ class ServiceRegistry extends Actor with ActorLogging {
       }
       services = services.updated(serviceId, newServices)
       if (leader)
-        newServices.foreach(context.watch)
+        newServices.foreach( service => context.watch(service))
 
     case SubscribeMicroservice(actor) => {
       serviceRegisterActor ! SubscribeService(actor)
+    }
+
+    case SentInfoToSubscribers => {
+      serviceRegisterActor ! ServiceKeysInfo(keys)
     }
     case LeaderChanged(node) =>
       val wasLeader = leader

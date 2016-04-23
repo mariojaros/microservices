@@ -4,7 +4,7 @@
 		module="microservices$sources_2.11"
 		revision="1.0"
 		status="integration"
-		publication="20160413091932"
+		publication="20160417105257"
 	/>
 	<configurations>
 		<conf name="default" visibility="public" description=""/>

@@ -21,7 +21,13 @@ object DatabaseApplication {
     Cluster(actorSystem).registerOnMemberUp {
       DistributedData(actorSystem)
 
-      InitDatabase.init()
+      Database.init()
+
+      val databaseService = actorSystem.actorOf(Props(new DatabaseMicroService("databaseMicroservices", Set("controllerMicroservices"))))
+
+      ServiceRegistryExtension.get(actorSystem).register("databaseMicroservices", databaseService)
+
+      ServiceRegistryExtension(actorSystem).subscribe(databaseService)
 
       val startApplication = actorSystem.actorOf(Props(new StartDatabaseApplicationService("startDatabaseApplication", Set("databaseMicroservices"))))
 
@@ -29,11 +35,7 @@ object DatabaseApplication {
 
       startApplication ! StartDatabaseApplication
 
-      val databaseService = actorSystem.actorOf(Props(new DatabaseMicroService("databaseMicroservices", Set("controllerMicroservices"))))
 
-      ServiceRegistryExtension.get(actorSystem).register("databaseMicroservices", databaseService)
-
-      ServiceRegistryExtension(actorSystem).subscribe(databaseService)
 
     }
   }

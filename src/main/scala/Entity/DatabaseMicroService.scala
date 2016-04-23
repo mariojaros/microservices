@@ -1,5 +1,6 @@
 package entity
 
+
 import entity.DatabaseMicroService._
 import akka.actor.ActorLogging
 import controller.MessageControllerMicroService.CheckEmployer
@@ -35,6 +36,7 @@ class DatabaseMicroService(id: String, dependencies: Set[String]) extends Micros
 
       sender() ! EmployerMessage(employer)
     }
+
     case EmployerChecked(employer) => {
       val futureWritingOnScreenMicroservice = ServiceRegistryExtension(context.system).lookup("writingOnScreenMicroservice")
       futureWritingOnScreenMicroservice foreach(writingOnScreenMicroservice => writingOnScreenMicroservice ! WriteOnScreenThis(employer))
@@ -49,6 +51,7 @@ class DatabaseMicroService(id: String, dependencies: Set[String]) extends Micros
     case DeleteEmployer(publicId) => {
       Db.delete(publicId)
     }
+
     case UpdateEmployer(publicId, updatedName, updatedSurname, updatedAddress, updatedAge) => {
       Db.query[Employer].whereEqual("publicId", publicId).fetchOne().map(employer => employer.copy(name = updatedName, surname = updatedSurname, address = updatedAddress, age = updatedAge)).map(updatedEmployer => Db.save(updatedEmployer))
     }
@@ -57,20 +60,44 @@ class DatabaseMicroService(id: String, dependencies: Set[String]) extends Micros
 
 }
 
+/**
+ *
+ */
 object DatabaseMicroService {
 
+  /**
+   *
+   */
   case object SomeEmployer
 
+  /**
+   *
+   */
   case class SaveEmployer(publicId: String, name: String, surname: String, address: String, vek: Int)
 
+  /**
+   *
+   */
   case class FindEmployer(publicId: String)
 
+  /**
+   *
+   */
   case class DeleteEmployer(publicId: String)
 
+  /**
+   *
+   */
   case class UpdateEmployer(publicId: String, name: String, surname: String, address: String, vek: Int)
 
+  /**
+   *
+   */
   case class EmployerMessage(employer: Employer)
 
+  /**
+   *
+   */
   case class EmployerChecked(employer: Employer)
 
 }

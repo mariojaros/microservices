@@ -1,11 +1,19 @@
 package entity
 
-import sorm._
+import sorm.{InitMode, Entity, Instance}
 
-/**
- * Created by mariojaros on 05.04.16.
- */
-case class Employer(
+
+
+object Database {
+
+  def init() = {
+    Db.save(Employer("1", "Mario", "Jaros", "Kvetna", 23))
+    Db.save(Employer("2", "Peter", "Chovanec", "Ulica", 26))
+    Db.save(Employer("3", "Pavol", "Jaros", "Kvetna", 19))
+  }
+}
+
+case class Employer (
                      publicId: String,
                      name: String,
                      surname: String,
@@ -22,13 +30,4 @@ object Db extends Instance(
   password = "",
   initMode = InitMode.Create
 )
-
-case object InitDatabase {
-
-  def init() = {
-    Db.save(Employer("1", "Mario", "Jaros", "Kvetna", 23))
-    Db.save(Employer("2", "Peter", "Chovanec", "Ulica", 26))
-    Db.save(Employer("3", "Pavol", "Jaros", "Kvetna", 19))
-  }
-}
 
