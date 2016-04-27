@@ -10,6 +10,7 @@ import microservices.{Microservice, ServiceRegistryExtension}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
+import scala.language.postfixOps
 
 /**
  * Created by mariojaros on 07.04.16.

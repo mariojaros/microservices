@@ -18,6 +18,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.io.StdIn
 import scala.util.{Failure, Success}
+import scala.language.postfixOps
 
 /**
  * Created by mariojaros on 11.04.16.

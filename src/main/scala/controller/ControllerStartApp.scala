@@ -7,6 +7,7 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import microservices.ServiceRegistryExtension
 import webserver.WebServerMicroservice
+import scala.language.postfixOps
 
 import scala.concurrent.duration._
 

@@ -3,11 +3,12 @@ package microservices
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import microservices.RegistryInfo.{ChangedData, ServiceKeysInfo, SubscribeService}
 import microservices.ServiceRegistry.ServiceKey
+import scala.language.postfixOps
 
-/** Class has responsibility for inform all her subscribers about available microservices.
+/** Class has responsibility for informing all her subscribers about available microservices.
   *
   * It contains set of local ActorRef - Subscribers, extends [[Actor]].
-  * Implemented [[Microservice]] can subscribe to [[RegistryInfo]] by sending a message [[SubscribeService]] with reference to self.
+  * Implemented [[Microservice]] can subscribe to [[RegistryInfo]] by sending a message [[SubscribeService]] with reference to itself.
   * It is waiting for messages from [[ServiceRegistry]] [[ChangedData]] and [[ServiceKeysInfo]] that contain information about available microservices.
   * When these two messages comes [[RegistryInfo]] sends a message [[RunningMicroservices]] to all subscribers.
   */
@@ -30,7 +31,6 @@ class RegistryInfo extends Actor with ActorLogging {
     *
     * When [[ServiceKeysInfo]] message comes [[RegistryInfo]] informs all subcribed services too.
     *
-    * @return
     */
   override def receive: Receive = {
 
@@ -59,7 +59,7 @@ class RegistryInfo extends Actor with ActorLogging {
   */
 object RegistryInfo {
 
-  /** Message for subscribe microservice. Subscribed microservice will getting info about running services.
+  /** Message to subscribe microservice. Subscribed microservice will be getting info about running services.
     *
     * @param actor is reference to microservice to subscribe.
     */
@@ -72,9 +72,9 @@ object RegistryInfo {
     */
   case class ChangedData(keys: Set[ServiceKey])
 
-  /** Message have information about running microservices.
+  /** Message has an information about running microservices.
     *
-    * Message is use to inform subscribers about available services when it needed. Not only when keys changed.
+    * Message is use to inform subscribers about available services when it is needed. Not only when keys changed.
     *
     * @param keys is [[Set]] of [[ServiceKey]] which represents microservices in system.
     */

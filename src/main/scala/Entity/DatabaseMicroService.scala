@@ -60,44 +60,27 @@ class DatabaseMicroService(id: String, dependencies: Set[String]) extends Micros
 
 }
 
-/**
- *
- */
 object DatabaseMicroService {
 
-  /**
-   *
-   */
+
   case object SomeEmployer
 
-  /**
-   *
-   */
+
   case class SaveEmployer(publicId: String, name: String, surname: String, address: String, vek: Int)
 
-  /**
-   *
-   */
+
   case class FindEmployer(publicId: String)
 
-  /**
-   *
-   */
+
   case class DeleteEmployer(publicId: String)
 
-  /**
-   *
-   */
+
   case class UpdateEmployer(publicId: String, name: String, surname: String, address: String, vek: Int)
 
-  /**
-   *
-   */
+
   case class EmployerMessage(employer: Employer)
 
-  /**
-   *
-   */
+
   case class EmployerChecked(employer: Employer)
 
 }

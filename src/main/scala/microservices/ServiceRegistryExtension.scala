@@ -14,7 +14,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-/** ServiceRegistry extension provide interface to main functionality of [[ServiceRegistry]].
+/** ServiceRegistry extension provides an interface to the main functionality of [[ServiceRegistry]].
   *
   * Class is implementing [[Extension]] class through is added new features to Akka system.
   * [[ServiceRegistryExtension]] is loaded once per [[ActorSystem]]. Whole features is comprised
@@ -23,7 +23,7 @@ import scala.language.postfixOps
   * In implemented class [[ServiceRegistryExtension]] provide API interface functionality of microservices system.
   * There are five methods: [[register()]], [[lookup()]], [[terminate()]], [[subscribe()]] and [[sentKeys()]].
   *
-  * Extension is wrapping [[ServiceRegistry]] actor and use his for all his work.
+  * Extension is wrapping [[ServiceRegistry]] actor and uses its own for all its work.
   * @param system is current [[ActorSystem]].
   */
 class ServiceRegistryExtension(system: ExtendedActorSystem) extends Extension {
@@ -90,7 +90,7 @@ class ServiceRegistryExtension(system: ExtendedActorSystem) extends Extension {
     futureActorRef.mapTo[ActorRef]
   }
 
-  /** Terminate a concrete microservice on demand.
+  /** Terminates a concrete microservice on demand.
     *
     * @param microservice is reference to Actor to terminate.
     */

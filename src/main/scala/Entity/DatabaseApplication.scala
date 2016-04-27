@@ -29,13 +29,11 @@ object DatabaseApplication {
 
       ServiceRegistryExtension(actorSystem).subscribe(databaseService)
 
-      val startApplication = actorSystem.actorOf(Props(new StartDatabaseApplicationService("startDatabaseApplication", Set("databaseMicroservices"))))
+      val startApplication = actorSystem.actorOf(Props(new StartDatabaseApplicationService("startDatabaseApplication", Set("databaseMicroservices", "controllerMicroservices"))))
 
       ServiceRegistryExtension.get(actorSystem).subscribe(startApplication)
 
       startApplication ! StartDatabaseApplication
-
-
 
     }
   }

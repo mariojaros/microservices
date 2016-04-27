@@ -8,6 +8,7 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import microservices.ServiceRegistryExtension
 import webserver.StartWebServerMicroservice.StartServer
+import scala.language.postfixOps
 
 import scala.concurrent.duration._
 
@@ -29,7 +30,7 @@ object WebServer {
 
       val webserverMicroservice = actorSystem.actorOf(Props(new WebServerMicroservice("webserverMicroservices", Set("databaseMicroservices"))))
 
-      val writingOnScreenMicroservice = actorSystem.actorOf(Props(new WritingOnScreenMicroservice("writingOnScreenMicroservice", null)))
+      val writingOnScreenMicroservice = actorSystem.actorOf(Props(new WritingOnScreenMicroservice("writingOnScreenMicroservice", Set("databaseMicroservices"))))
 
       ServiceRegistryExtension(actorSystem).register("writingOnScreenMicroservice", writingOnScreenMicroservice)
 

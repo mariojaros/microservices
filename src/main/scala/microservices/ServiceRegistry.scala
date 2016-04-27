@@ -10,17 +10,15 @@ import microservices.RegistryInfo.{ServiceKeysInfo, ChangedData, SubscribeServic
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-/** Companion object [[ServiceRegistry]] contains case classes represents messages which [[ServiceRegistry]] can receive.
-  *
-  */
+/** Companion object [[ServiceRegistry]] contains case classes that represents messages which [[ServiceRegistry]] can receive. */
 
 object ServiceRegistry {
 
   val props: Props = Props[ServiceRegistry]
 
-  /** Message for register microservice.
+  /** Message for registering microservice.
     *
-    * It holds name of service which will represents ID of microservice in whole distributed system. It also
+    * It holds name of service which will represents ID of microservice in the whole distributed system. It also
     * contains reference to microservice where others microservices can send messages.
     *
     * @param name is ID of registering microservice.
@@ -45,9 +43,9 @@ object ServiceRegistry {
 
   case class Terminate(service: ActorRef)
 
-  /** Class represent a key in distributed database.
+  /** Class represents a key in distributed database.
     *
-    * Extends [[Key]] to be able for saving in distributed database.
+    * Extends [[Key]] to be able to save in distributed database.
     *
     * @param serviceName is ID which represents microservice in system.
     */
@@ -71,9 +69,9 @@ object ServiceRegistry {
 
 }
 
-/** Purpose of class is manage all Microservice.
+/** Purpose of class is to manage all Microservices.
   *
-  * It provide three main functionality for management od microservices:
+  * It provides three main functions for management od microservices:
   *
   * [[microservices.ServiceRegistry.Register]]
   *
@@ -81,13 +79,13 @@ object ServiceRegistry {
   *
   * [[microservices.ServiceRegistry.Terminate]]
   *
-  * Except of these three funcionality provide some other work for stable running of managment service.
+  * Except for these three functions, it provides some other work for stable running of managment service.
   *
-  * Class holds reference of [[Actor]] [[RegistryInfo]] and using it for informing microservices about their dependencies.
+  * Class holds reference of [[Actor]] [[RegistryInfo]] and uses it for informing microservices about their dependencies.
   * When [[ServiceRegistry]] receives [[microservices.ServiceRegistry.SubscribeMicroservice]] message [[SubscribeService]] is sent to
   * reference of [[RegistryInfo]].
   *
-  * [[ServiceRegistry]] is existed one per node in the cluster. Data are saved in distributed database. [[Replicator]] serve as
+  * [[ServiceRegistry]] is exists one per node in the cluster. Data are saved in distributed database. [[Replicator]] serve as
   * API interface to operate with data.
   *
   */
@@ -123,8 +121,8 @@ class ServiceRegistry extends Actor with ActorLogging {
 
   /** Override [[Actor]] method to implement some logic before start of [[ServiceRegistry]].
     *
-    * [[ServiceRegistry]] is subscribed to [[replicator]] to subscribe for events in distributed database.
-    * [[ServiceRegistry]] is subscribed to [[cluster]] to subscribe for events in cluster.
+    * [[ServiceRegistry]] is subscribed to [[replicator]] to subscribe to events in distributed database.
+    * [[ServiceRegistry]] is subscribed to [[cluster]] to subscribe to events in cluster.
     */
   override def preStart(): Unit = {
     replicator ! Subscribe(AllServicesKey, self)
@@ -143,20 +141,20 @@ class ServiceRegistry extends Actor with ActorLogging {
     *
     * [[ServiceRegistry]] can receive eight kind of message.
     *
-    * When [[Register]] comes with ID and reference to [[Microservice]] it save in distributed database via [[replicator]] and also
+    * When [[Register]] comes with ID and reference to [[Microservice]] it saves into distributed database via [[replicator]] and also
     * it save new [[ServiceKey]] to set of available microservices.
     *
-    * When [[Terminated]] comes from [[context]] of dead actor [[ServiceRegistry]] delete this actor from distributed data.
+    * When [[Terminated]] comes from [[context]] of dead actor [[ServiceRegistry]] deletes this actor from distributed data.
     *
-    * When [[Terminate]] comes with reference to actor microservice is deleted from distributed data.
+    * When [[Terminate]] comes with reference to actor microservice it is deleted from distributed data.
     *
     * When [[Changed]] comes it can contains information about changed set of [[ServiceKey]] or changed data of microservices
-    * wtih specific key. If there is a new service [[ServiceRegistry]] subscribe for events of her lifecycle. If set of services
-    * with specific key is changed local variable [[services]] is changing too.
+    * wtih specific key. If there is a new service then [[ServiceRegistry]] subscribes for events of her lifecycle. If set of services
+    * with specific key is changed, local variable [[services]] are changing too.
     *
-    * When [[SubscribeMicroservice]] or [[SentInfoToSubscribers]] comes [[ServiceRegistry]] send available services to [[serviceRegisterActor]].
+    * When [[SubscribeMicroservice]] or [[SentInfoToSubscribers]] comes [[ServiceRegistry]] sends available services to [[serviceRegisterActor]].
     *
-    * When [[LeaderChanged]] comes node which was [[leader]] failed and new was set.
+    * When [[LeaderChanged]] comes node, which was as a [[leader]] failed and new one was set.
     */
   def receive = {
     case Register(id, service) =>
